@@ -11,6 +11,7 @@ from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import wraps
+import pandas as pd
 
 from flask import (Flask, Response, abort, flash, g, redirect, render_template,
                    request, send_from_directory, session, url_for)
@@ -444,8 +445,24 @@ def purchase_query(args):
 
 @app.route("/purchases")
 def purchases():
-    return render_template("purchases.html", purchases=purchase_query(request.args).all(),
-                           vendors=Vendor.query.order_by(Vendor.name).all())
+    purchases = purchase_query(request.args).all()
+
+    total_purchases = len(purchases)
+    total_amount = sum(p.total for p in purchases)
+    paid_purchases = sum(1 for p in purchases if p.payment_status == "Paid")
+    pending_purchases = sum(
+        1 for p in purchases if p.payment_status in ["Pending", "Partial"]
+    )
+
+    return render_template(
+        "purchases.html",
+        purchases=purchases,
+        vendors=Vendor.query.order_by(Vendor.name).all(),
+        total_purchases=total_purchases,
+        total_amount=total_amount,
+        paid_purchases=paid_purchases,
+        pending_purchases=pending_purchases,
+    )
 
 
 @app.route("/purchases/<int:id>")

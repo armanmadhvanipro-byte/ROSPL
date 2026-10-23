@@ -1,37 +1,101 @@
 {% extends "base.html" %}
 {% from "macros.html" import badge, delete_btn, empty with context %}
 {% block title %}Purchases &amp; Invoices{% endblock %}
-{% block actions %}<a class="btn primary" data-t="new_purchase" href="{{ url_for('purchase_form') }}">+ New purchase</a>{% endblock %}
+{% block actions %}<a class="btn primary" data-t="new_purchase" href="{{ url_for('purchase_form') }}">+ New
+  purchase</a>{% endblock %}
 {% block content %}
 {% set a = request.args %}
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card p-3">
+      <h6>Total Purchases</h6>
+      <h3>{{ total_purchases }}</h3>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <h6>Total Amount</h6>
+      <h3>{{ total_amount|money }}</h3>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <h6>Paid</h6>
+      <h3>{{ paid_purchases }}</h3>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <h6>Pending / Partial</h6>
+      <h3>{{ pending_purchases }}</h3>
+    </div>
+  </div>
+</div>
+
 <form class="filters" method="get">
   <input type="search" name="q" value="{{ a.q }}" placeholder="Invoice no, vendor, notes…">
-  <select name="vendor_id"><option value="">All vendors</option>
-    {% for v in vendors %}<option value="{{ v.id }}" {{ 'selected' if a.vendor_id == v.id|string }}>{{ v.name }}</option>{% endfor %}</select>
-  <select name="payment"><option value="">Any payment</option><option value="unpaid" {{ 'selected' if a.payment == 'unpaid' }}>Not fully paid</option>
-    {% for s in PAYMENT_STATUSES %}<option {{ 'selected' if a.payment == s }}>{{ s }}</option>{% endfor %}</select>
+  <select name="vendor_id">
+    <option value="">All vendors</option>
+    {% for v in vendors %}<option value="{{ v.id }}" {{ 'selected' if a.vendor_id==v.id|string }}>{{ v.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="payment">
+    <option value="">Any payment</option>
+    <option value="unpaid" {{ 'selected' if a.payment=='unpaid' }}>Not fully paid</option>
+    {% for s in PAYMENT_STATUSES %}<option {{ 'selected' if a.payment==s }}>{{ s }}</option>{% endfor %}
+  </select>
   <label>From <input type="date" name="date_from" value="{{ a.date_from }}"></label>
   <label>To <input type="date" name="date_to" value="{{ a.date_to }}"></label>
-  <label class="check"><input type="checkbox" name="missing" value="1" {{ 'checked' if a.missing }}> Missing invoice</label>
+  <label class="check"><input type="checkbox" name="missing" value="1" {{ 'checked' if a.missing }}> Missing
+    invoice</label>
   <button class="btn">Filter</button>
   {% if a %}<a class="btn ghost" href="{{ url_for('purchases') }}">Clear</a>{% endif %}
 </form>
-<div class="card table-wrap"><table>
-  <thead><tr><th>Invoice no</th><th>Date</th><th>Vendor</th><th class="num">Amount</th><th class="num">Tax</th><th class="num">Total</th><th>Payment</th><th>Document</th><th class="num">Assets</th><th></th></tr></thead>
-  <tbody>
-  {% for p in purchases %}
-  <tr>
-    <td><a href="{{ url_for('purchase_detail', id=p.id) }}"><b>{{ p.invoice_no }}</b></a></td>
-    <td>{{ p.purchase_date|d }}</td>
-    <td>{{ p.vendor.name }}</td>
-    <td class="num">{{ p.amount|money }}</td><td class="num">{{ p.tax|money }}</td><td class="num"><b>{{ p.total|money }}</b></td>
-    <td>{{ badge(p.payment_status) }}</td>
-    <td>{% if p.invoice_file %}<a href="{{ url_for('invoice', id=p.id) }}" target="_blank">View</a>{% else %}{{ badge('Missing') }}{% endif %}</td>
-    <td class="num">{{ p.assets|length }}</td>
-    <td class="row-actions"><a class="btn sm" href="{{ url_for('purchase_form', id=p.id) }}">Edit</a>{{ delete_btn('purchases', p.id) }}</td>
-  </tr>
-  {% else %}{{ empty(10) }}{% endfor %}
-  </tbody>
-  {% if purchases %}<tfoot><tr><td colspan="5">{{ purchases|length }} purchases</td><td class="num"><b>{{ purchases|sum(attribute='total')|money }}</b></td><td colspan="4"></td></tr></tfoot>{% endif %}
-</table></div>
+<div class="card table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Invoice no</th>
+        <th>Date</th>
+        <th>Vendor</th>
+        <th class="num">Amount</th>
+        <th class="num">Tax</th>
+        <th class="num">Total</th>
+        <th>Payment</th>
+        <th>Document</th>
+        <th class="num">Assets</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in purchases %}
+      <tr>
+        <td><a href="{{ url_for('purchase_detail', id=p.id) }}"><b>{{ p.invoice_no }}</b></a></td>
+        <td>{{ p.purchase_date|d }}</td>
+        <td>{{ p.vendor.name }}</td>
+        <td class="num">{{ p.amount|money }}</td>
+        <td class="num">{{ p.tax|money }}</td>
+        <td class="num"><b>{{ p.total|money }}</b></td>
+        <td>{{ badge(p.payment_status) }}</td>
+        <td>{% if p.invoice_file %}<a href="{{ url_for('invoice', id=p.id) }}" target="_blank">View</a>{% else %}{{
+          badge('Missing') }}{% endif %}</td>
+        <td class="num">{{ p.assets|length }}</td>
+        <td class="row-actions"><a class="btn sm" href="{{ url_for('purchase_form', id=p.id) }}">Edit</a>{{
+          delete_btn('purchases', p.id) }}</td>
+      </tr>
+      {% else %}{{ empty(10) }}{% endfor %}
+    </tbody>
+    {% if purchases %}<tfoot>
+      <tr>
+        <td colspan="5">{{ purchases|length }} purchases</td>
+        <td class="num"><b>{{ purchases|sum(attribute='total')|money }}</b></td>
+        <td colspan="4"></td>
+      </tr>
+    </tfoot>{% endif %}
+  </table>
+</div>
 {% endblock %}
