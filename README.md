@@ -6,6 +6,7 @@ Business purchase, invoice, asset, warranty and service tracking — BE SEM 7 RO
 **Lifecycle:** Purchase → Invoice → Asset Registration → Warranty Tracking → Service/Maintenance → Warranty Expiry
 
 ## Features
+
 - Login with roles: **admin** (everything, incl. deletes and user management) and **staff** (add/edit).
 - Vendors with contact and GSTIN; purchases with invoice no, date, amount, tax, payment status and invoice upload (PDF/image).
 - Assets linked to their invoice, with serial no, category, department, location and status.
@@ -19,39 +20,19 @@ Business purchase, invoice, asset, warranty and service tracking — BE SEM 7 RO
 - **Yappr, the AI assistant** (bottom-right, or Ctrl+K): an animated companion (ported from the Katachi call desk) that answers questions about your data and drives the app. Ask "which warranties expire this month?", "purchases from TechWorld missing invoices" or "export the asset register as PDF", and it opens the right page with the filters applied. Ask "how do I upload an invoice?" and it flies to that field, rings it and says what to do. "Open X", "add a purchase" and how/where questions work instantly without a model key; data questions need `GEMINI_API_KEY` or `GROQ_API_KEY`. The model runs server-side through read-only tools, so keys never reach the browser.
 - Motion everywhere: page cross-fades, staggered entrances, counting numbers, growing bars, ripples and an animated sign-in page. All of it switches off under the OS "reduce motion" setting.
 
+## Project Highlights
+
+- 🧾 **Purchase & Invoice Management** — Record purchases, invoices, payment status and supporting documents.
+- 🏢 **Vendor & Asset Tracking** — Maintain vendor details and connect assets with their purchase invoices.
+- 🛡️ **Warranty & AMC Management** — Monitor warranty periods, expiry status and AMC renewals.
+- 🔧 **Service History** — Track asset repairs, service cases and maintenance activities.
+- 📊 **Reports & Dashboard** — View business summaries and export filtered reports in CSV or PDF format.
+- 🤖 **AI-Powered Yappr Assistant** — Use natural-language commands to navigate the application and retrieve data insights.
+
 ## Run locally
+
 ```powershell
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 .venv\Scripts\python -m flask --app app seed   # optional demo data
 .venv\Scripts\python app.py                    # http://127.0.0.1:5000
-```
-First start creates the user **admin / admin@123**. Change it under **Users** right away.
-
-Self-check: `.venv\Scripts\python test_app.py`
-
-## Configuration (environment variables)
-| Variable | Default | Purpose |
-|---|---|---|
-| `DATABASE_URL` | `sqlite:///pwm.db` (in `instance/`) | e.g. `mysql+pymysql://user:pass@host/pwm` for MySQL |
-| `SECRET_KEY` | dev value | **Set in production** |
-| `ADMIN_PASSWORD` | `admin@123` | Password for the auto-created first admin |
-| `EXPIRING_DAYS` | `30` | Default "expiring soon" window |
-| `GEMINI_API_KEY` | — | Yappr's model (Gemini Flash-Lite, tried first) |
-| `GROQ_API_KEY`, `GROQ_API_KEY_2` | — | Yappr's fallback model (Groq) |
-| `GEMINI_AGENT_MODELS`, `GROQ_AGENT_MODEL` | `gemini-3.5-flash-lite,gemini-3.1-flash-lite`, `qwen/qwen3.8-27b` | Override the model names |
-
-## Deploy (Render)
-- Build: `pip install -r requirements.txt`
-- Start: `gunicorn app:app`
-- Set `SECRET_KEY`, `ADMIN_PASSWORD` and `DATABASE_URL` (MySQL). Uploaded invoices go to `instance/uploads`; attach a persistent disk there.
-
-## Project layout
-```
-app.py            models, business rules, routes, reports, Yappr's model loop and tools, seed command
-templates/        Jinja pages (macros.html holds shared form/badge helpers)
-static/style.css  UI styles and motion (light/dark, responsive)
-static/app.js     page motion: stagger order, count-up numbers, ripples
-static/yappr/     the companion: yappr.js (chat, local commands, pointing), yappr.css, avatar.json (faces and moods)
-test_app.py       end-to-end self-check
-```
