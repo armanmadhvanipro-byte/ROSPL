@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge with context %}
+{% block title %}Dashboard{% endblock %}
+{% block actions %}
+<form method="get" class="inline">
+  <label class="muted">Expiry window
+    <select name="days" onchange="this.form.submit()">
+      {% for d in [7, 15, 30, 60, 90, 180] %}<option value="{{ d }}" {{ 'selected' if d == days }}>{{ d }} days</option>{% endfor %}
+    </select>
+  </label>
+</form>
+<a class="btn primary" href="{{ url_for('purchase_form') }}">+ New purchase</a>
+{% endblock %}
+{% block content %}
+<section class="stats" data-t="kpis">
+  <a class="stat" href="{{ url_for('purchases') }}"><span>Total purchases</span><b data-count>{{ purchase_count }}</b><small data-count>{{ total_spend|money }} spent</small></a>
+  <a class="stat" href="{{ url_for('assets') }}"><span>Registered assets</span><b data-count>{{ asset_count }}</b><small data-count>{{ asset_value|money }} value</small></a>
+  <a class="stat ok" href="{{ url_for('warranties', status='Active', days=days) }}"><span>Active warranties</span><b data-count>{{ counts['Active'] }}</b><small>beyond {{ days }} days</small></a>
+  <a class="stat warn" href="{{ url_for('warranties', status='Expiring Soon', days=days) }}"><span>Expiring soon</span><b data-count>{{ counts['Expiring Soon'] }}</b><small>within {{ days }} days</small></a>
+  <a class="stat bad" href="{{ url_for('warranties', status='Expired', days=days) }}"><span>Expired</span><b data-count>{{ counts['Expired'] }}</b><small>coverage ended</small></a>
+  <a class="stat" href="{{ url_for('warranties', status='Pending', days=days) }}"><span>Warranty pending</span><b data-count>{{ counts['Pending'] }}</b><small>no coverage recorded</small></a>
+</section>
+
+<section class="card" data-t="attention">
+  <h2>Needs attention</h2>
+  <ul class="alerts">
+    {% for label, (n, url) in alerts.items() if n %}
+    <li><a href="{{ url }}"><b>{{ n }}</b> {{ label }}</a></li>
+    {% else %}
+    <li class="muted">Nothing needs attention right now.</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<div class="grid">
+  <section class="card" data-t="expiring">
+    <h2>Warranties expiring in {{ days }} days</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Asset</th><th>Serial</th><th>Expires</th><th class="num">Days left</th></tr></thead>
+      <tbody>
+      {% for a in expiring %}
+      <tr><td><a href="{{ url_for('asset_detail', id=a.id) }}">{{ a.name }}</a></td><td>{{ a.serial_no or '—' }}</td>
+          <td>{{ a.warranty_expiry|d }}</td><td class="num">{{ a.days_left }}</td></tr>
+      {% else %}<tr><td colspan="4" class="empty">No warranties expiring in this window.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="card" data-t="vendor_chart">
+    <h2>Vendor-wise purchases</h2>
+    {% for name, n, total, pct in by_vendor %}
+    <div class="bar-row"><span>{{ name }} <small class="muted">({{ n }})</small></span>
+      <div class="bar"><i style="width: {{ pct }}%"></i></div><b>{{ total|money }}</b></div>
+    {% else %}<p class="empty">No purchases yet.</p>{% endfor %}
+  </section>
+
+  <section class="card" data-t="category_chart">
+    <h2>Asset value by category</h2>
+    {% for cat, n, total, pct in by_category %}
+    <div class="bar-row"><span>{{ cat }} <small class="muted">({{ n }})</small></span>
+      <div class="bar alt"><i style="width: {{ pct }}%"></i></div><b>{{ total|money }}</b></div>
+    {% else %}<p class="empty">No assets yet.</p>{% endfor %}
+  </section>
+
+  <section class="card" data-t="renewals">
+    <h2>Upcoming service &amp; AMC renewals</h2>
+    <ul class="list">
+      {% for s in services_due %}
+      <li><span>Service due: <a href="{{ url_for('asset_detail', id=s.asset.id) }}">{{ s.asset.name }}</a></span><b>{{ s.next_service_date|d }}</b></li>
+      {% endfor %}
+      {% for a in amc_expiring %}
+      <li><span>AMC ends: <a href="{{ url_for('asset_detail', id=a.id) }}">{{ a.name }}</a></span><b>{{ a.amc_end|d }}</b></li>
+      {% endfor %}
+      {% if not services_due and not amc_expiring %}<li class="empty">Nothing due in this window.</li>{% endif %}
+    </ul>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Recent purchases</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Invoice</th><th>Date</th><th>Vendor</th><th class="num">Total</th><th>Payment</th></tr></thead>
+    <tbody>
+    {% for p in recent %}
+    <tr><td><a href="{{ url_for('purchase_detail', id=p.id) }}">{{ p.invoice_no }}</a></td><td>{{ p.purchase_date|d }}</td>
+        <td>{{ p.vendor.name }}</td><td class="num">{{ p.total|money }}</td><td>{{ badge(p.payment_status) }}</td></tr>
+    {% else %}<tr><td colspan="5" class="empty">No purchases yet. <a href="{{ url_for('vendor_form') }}">Add a vendor</a> to get started.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

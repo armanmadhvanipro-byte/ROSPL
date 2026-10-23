@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "macros.html" import flashes with context %}
+{% block title %}Sign in{% endblock %}
+{% block bare %}
+<div class="login">
+  <form method="post" class="card">
+    <h1>Purchase &amp; Warranty Manager</h1>
+    <p class="muted">Sign in to manage purchases, invoices, assets and warranties.</p>
+    {{ flashes() }}
+    {{ csrf_input() }}
+    <label class="field"><span>Username</span><input name="username" autocomplete="username" required autofocus></label>
+    <label class="field"><span>Password</span><input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn primary block">Sign in</button>
+  </form>
+</div>
+<script>try { sessionStorage.removeItem('yappr:v1'); sessionStorage.removeItem('yappr:hi'); } catch {}</script>
+{% endblock %}

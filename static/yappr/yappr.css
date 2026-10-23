@@ -1,0 +1,128 @@
+﻿/* Yappr: the animated companion and its glass chat sheet (ported from the Katachi call desk).
+   The face is a few DOM nodes moved by CSS transitions (compositor work, no per-frame loop). */
+:root {
+  --y-ink: #14243a; --y-dim: #5d6b7e; --y-hair: rgba(20, 40, 70, .12);
+  --y-sage: #6f8a5e; --y-sage-ink: #3f5a36; --y-clay: #a8452e;
+  --y-glass: linear-gradient(118deg, rgba(255,255,255,.92), rgba(255,255,255,.72)), rgba(240,245,252,.6);
+  --y-shadow: inset 1px 1px 0 rgba(255,255,255,.9), 0 14px 26px -18px rgba(15,39,66,.3), 0 40px 70px -40px rgba(15,39,66,.45);
+  --y-bubble: rgba(255,255,255,.75); --y-user: #1f5fae; --y-user-ink: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --y-ink: #e3e8ef; --y-dim: #93a0b2; --y-hair: rgba(255,255,255,.1); --y-sage-ink: #9fc08c; --y-clay: #f28b82;
+    --y-glass: linear-gradient(118deg, rgba(40,50,64,.92), rgba(23,30,40,.85)), rgba(23,30,40,.7);
+    --y-shadow: inset 1px 1px 0 rgba(255,255,255,.08), 0 14px 26px -18px rgba(0,0,0,.6), 0 40px 70px -40px rgba(0,0,0,.8);
+    --y-bubble: rgba(255,255,255,.07); --y-user: #4f8fe0;
+  }
+}
+
+@property --bd { syntax: '<color>'; inherits: true; initial-value: #8fa67e }
+@property --ey { syntax: '<color>'; inherits: true; initial-value: #2a1e16 }
+@property --fy { syntax: '<length>'; inherits: true; initial-value: 5px }
+@property --fr { syntax: '<angle>'; inherits: true; initial-value: 3deg }
+
+/* the avatar: a ball, a face that turns, two eyes that change shape */
+.yav { --s: 60px; --bd: #8fa67e; --ey: #2a1e16; position: relative; display: block; flex: none; width: var(--s); height: var(--s); contain: layout style; transition: --bd .6s, --ey .6s }
+.yav .mot, .yav .bod, .yav .face, .yav .lids { position: absolute; inset: 0 }
+.yav .ball { position: absolute; inset: 0; border-radius: 50%; animation: y-breathe 4.6s ease-in-out infinite;
+  background: radial-gradient(circle at 36% 28%, color-mix(in srgb, var(--bd) 30%, #fff) 0, var(--bd) 40%, color-mix(in srgb, var(--bd) 62%, #2a1e16) 100%);
+  box-shadow: inset 0 -3px 8px rgba(42,30,22,.22), inset 2px 3px 5px rgba(255,255,255,.5), 0 10px 22px -8px rgba(79,107,69,.6) }
+.yav .eye { position: absolute; left: 50%; top: 50%; border-radius: 999px; background: var(--ey); width: calc(var(--s) * 20 / 240); height: calc(var(--s) * 50 / 240);
+  transform: translate(calc(var(--s) * -17.5 / 240 - 50%), calc(var(--s) * -7 / 240 - 50%)); transition: width var(--t, .5s), height var(--t, .5s), transform var(--t, .5s) }
+.yav .eye + .eye { transform: translate(calc(var(--s) * 17.5 / 240 - 50%), calc(var(--s) * -7 / 240 - 50%)) }
+.yav .face { transition: transform var(--t, .5s) cubic-bezier(.4, 0, .2, 1) }
+.yav .lids.blink { animation: y-blink var(--bt, .26s) ease-in-out }
+.yav.m-shake .mot { animation: y-shake .45s ease-in-out infinite }
+.yav.m-drift .mot { animation: y-drift 3.4s ease-in-out infinite }
+.yav.e-shake .eye { animation: y-shake .3s infinite }
+.yav .bod.hop { animation: y-hop .6s cubic-bezier(.3, 1.5, .5, 1) }
+
+/* the companion in its corner */
+.ybtn { position: fixed; z-index: 72; right: 24px; bottom: 24px; padding: 0; border: 0; background: none; border-radius: 50%; cursor: pointer;
+  transition: transform .8s cubic-bezier(.34, 1.45, .5, 1), translate 1.8s cubic-bezier(.45, 0, .25, 1), scale .4s ease;
+  animation: y-arrive .9s cubic-bezier(.34, 1.45, .5, 1) .3s backwards }
+.ybtn:hover { scale: 1.06 }
+.ybtn:focus-visible { outline: 2px solid var(--y-user); outline-offset: 5px }
+.ybtn.away { z-index: 85 }
+.ybtn.tracking { transition: transform .22s ease-out, translate 1.8s cubic-bezier(.45, 0, .25, 1), scale .4s ease }
+.ybtn .yav { animation: y-float 3.6s ease-in-out infinite; transition: --bd .6s, --ey .6s, --fy 1.2s ease, --fr 1.2s ease }
+.ybtn::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(111,138,94,.35); animation: y-halo 3.2s ease-out infinite; pointer-events: none }
+.ybtn[aria-expanded=true]::before, .ybtn.away::before { display: none }
+.ybtn:is([data-mood=thinking], [data-mood=working], [data-mood=searching], [data-mood=listening]) .yav { --fy: 3px; --fr: 1.5deg }
+.ybtn:is([data-mood=happy], [data-mood=excited], [data-mood=playful], [data-mood=celebrate], [data-mood=laughing], [data-mood=proud]) .yav { --fy: 9px; --fr: 6deg }
+.ybtn:is([data-mood=sleeping], [data-mood=drowsy], [data-mood=bored], [data-mood=sad]) .yav { --fy: 2px; --fr: 1deg }
+@keyframes y-breathe { 50% { scale: 1.03 .98 } }
+@keyframes y-blink { 50% { scale: 1 .08 } }
+@keyframes y-float { 0%, 100% { translate: 0 0; rotate: calc(var(--fr) * -1) } 50% { translate: 0 calc(var(--fy) * -1); rotate: var(--fr) } }
+@keyframes y-shake { 25% { translate: -2px 0 } 75% { translate: 2px 0 } }
+@keyframes y-drift { 50% { translate: 0 -3px } }
+@keyframes y-hop { 25% { scale: 1.1 .88; translate: 0 2px } 55% { scale: .94 1.08; translate: 0 -8px } 80% { scale: 1.02 .98; translate: 0 0 } }
+@keyframes y-pop { from { opacity: 0; scale: .86 } }
+@keyframes y-arrive { from { opacity: 0; translate: 0 80px; scale: .4 } }
+@keyframes y-halo { 0% { opacity: .9; scale: .95 } 70%, 100% { opacity: 0; scale: 1.35 } }
+
+/* speech bubble and the ring around what it points at */
+.y-bub { position: fixed; z-index: 86; max-width: min(300px, calc(100vw - 32px)); padding: 13px 36px 13px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; color: var(--y-ink);
+  background: var(--y-glass); border: 1px solid var(--y-hair); backdrop-filter: blur(12px) saturate(160%); -webkit-backdrop-filter: blur(12px) saturate(160%); box-shadow: var(--y-shadow);
+  transform-origin: var(--ox, 100%) var(--oy, 100%); animation: y-pop .4s cubic-bezier(.34, 1.45, .5, 1) }
+.y-bub p { margin: 0 }
+.y-bub-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px } .y-bub-acts:empty { display: none }
+.y-bub-acts button { font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 13px; border-radius: 99px; border: 0; cursor: pointer; background: var(--y-user); color: var(--y-user-ink) }
+.y-x, .y-icon { display: grid; place-items: center; border: 0; background: none; cursor: pointer; color: var(--y-dim); border-radius: 50% }
+.y-x { position: absolute; top: 7px; right: 7px; width: 26px; height: 26px }
+.y-icon { width: 36px; height: 36px; transition: background .2s, rotate .3s }
+.y-icon:hover { background: var(--y-hair); color: var(--y-ink) }
+#yNew:hover { rotate: 90deg }
+.y-x svg, .y-icon svg, .y-send svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+/* The ring: a still 2px line plus a halo that pulses by opacity only. Where CSS anchor positioning
+   exists it is glued to the element and follows scrolling with no script at all. */
+.y-spot { position: fixed; z-index: 84; pointer-events: none; border-radius: 12px; box-shadow: 0 0 0 2px var(--y-sage-ink) }
+.y-spot::after { content: ""; position: absolute; inset: -9px; border-radius: 18px; border: 6px solid rgba(111,138,94,.32); animation: y-ring 1.4s ease-in-out infinite; will-change: opacity }
+@keyframes y-ring { 50% { opacity: .15 } }
+.y-spot.anchored { position-anchor: --y-pt; top: calc(anchor(top) - 6px); left: calc(anchor(left) - 6px); width: calc(anchor-size(width) + 12px); height: calc(anchor-size(height) + 12px) }
+
+/* the chat sheet */
+.y-agent { position: fixed; z-index: 70; right: 24px; bottom: 100px; width: min(410px, calc(100vw - 32px)); height: min(600px, calc(100dvh - 140px)); display: flex; flex-direction: column; overflow: hidden; border-radius: 24px;
+  color: var(--y-ink); background: var(--y-glass); border: 1px solid var(--y-hair); box-shadow: var(--y-shadow);
+  backdrop-filter: blur(14px) saturate(170%); -webkit-backdrop-filter: blur(14px) saturate(170%);
+  transform-origin: bottom right; animation: y-pop .45s cubic-bezier(.34, 1.45, .5, 1) }
+.y-agent[hidden] { display: none }
+.y-top { display: flex; align-items: center; gap: 11px; padding: 14px 12px 14px 16px; border-bottom: 1px solid var(--y-hair) }
+.y-top div { flex: 1; min-width: 0 }
+.y-top b { display: block; font-size: 18px; line-height: 1.1 }
+.y-top small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--y-dim); margin-top: 2px }
+.y-log { flex: 1; overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 14.5px; scroll-behavior: smooth; overscroll-behavior: contain }
+.y-log > * { flex-shrink: 0; animation: y-in .3s ease-out backwards }
+@keyframes y-in { from { opacity: 0; translate: 0 6px } }
+.y-msg { max-width: 88%; padding: 10px 14px; border-radius: 18px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere }
+.y-msg.u { align-self: flex-end; background: var(--y-user); color: var(--y-user-ink); border-bottom-right-radius: 6px }
+.y-msg.a { align-self: flex-start; background: var(--y-bubble); border: 1px solid var(--y-hair); border-bottom-left-radius: 6px }
+.y-msg.a.live::after { content: ""; display: inline-block; width: 7px; height: 14px; margin-left: 3px; vertical-align: -2px; background: var(--y-sage); border-radius: 2px; animation: y-caret 1s steps(2) infinite }
+@keyframes y-caret { 50% { opacity: 0 } }
+.y-msg.err { background: rgba(168,69,46,.1); border-color: rgba(168,69,46,.3); color: var(--y-clay) }
+.y-act { align-self: flex-start; display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--y-sage-ink); padding: 2px 4px }
+.y-act::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--y-sage) }
+.y-act a { color: inherit; text-decoration: underline }
+.y-act.stopped { color: var(--y-dim) } .y-act.stopped::before { background: var(--y-dim) }
+.y-sugg { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 2px }
+.y-sugg button { font: inherit; font-size: 13px; font-weight: 500; padding: 7px 13px; border-radius: 99px; cursor: pointer; color: var(--y-ink); background: var(--y-bubble); border: 1px solid var(--y-hair); transition: background .2s, transform .15s, border-color .2s }
+.y-sugg button:hover { border-color: var(--y-user); transform: translateY(-2px) }
+.y-dots { align-self: flex-start; display: flex; gap: 5px; padding: 12px 14px; border-radius: 18px; background: var(--y-bubble) }
+.y-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--y-sage); animation: y-dot 1.1s ease-in-out infinite }
+.y-dots i:nth-child(2) { animation-delay: .15s } .y-dots i:nth-child(3) { animation-delay: .3s }
+@keyframes y-dot { 40% { translate: 0 -4px; opacity: .5 } }
+.y-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--y-hair) }
+.y-form input { flex: 1; min-width: 0; height: 46px; padding: 0 16px; border-radius: 99px; border: 1px solid var(--y-hair); background: var(--y-bubble); color: var(--y-ink); outline: none; font: inherit; font-size: 14.5px }
+.y-form input:focus { border-color: var(--y-user); box-shadow: 0 0 0 3px rgba(31,95,174,.2) }
+.y-send { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; background: var(--y-user); color: var(--y-user-ink); box-shadow: 0 10px 20px -10px rgba(31,95,174,.8); transition: transform .15s }
+.y-send:active { transform: scale(.92) }
+.y-send.stop { background: var(--y-clay) }
+.y-send.stop svg { fill: currentColor; stroke: none }
+
+@media (max-width: 760px) {
+  .ybtn { right: 16px; bottom: 16px }
+  .ybtn .yav { --s: 52px }
+  .y-agent { left: 10px; right: 10px; width: auto; top: 12px; bottom: 84px; height: auto; transform-origin: bottom center }
+}
+@media (prefers-reduced-motion: reduce) { .y-spot::after, .ybtn::before { animation: none } }
+@media print { .ybtn, .y-agent, .y-bub, .y-spot { display: none !important } }

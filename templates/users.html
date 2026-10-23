@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "macros.html" import delete_btn, badge with context %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="grid">
+  <section class="card table-wrap">
+    <h2>Accounts</h2>
+    <table>
+      <thead><tr><th>Username</th><th>Role</th><th></th></tr></thead>
+      <tbody>
+      {% for u in users %}
+      <tr><td>{{ u.username }}{% if u.id == g.user.id %} <small class="muted">(you)</small>{% endif %}</td><td>{{ badge(u.role|capitalize) }}</td>
+          <td class="row-actions">{% if u.id != g.user.id %}{{ delete_btn('users', u.id) }}{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <form method="post" class="card form">
+    <h2>Add user or reset password</h2>
+    <p class="muted">Entering an existing username updates that user's password and role. Staff can add and edit records; only admins can delete records and manage users.</p>
+    {{ csrf_input() }}
+    <label class="field"><span>Username <em>*</em></span><input name="username" required autocomplete="off"></label>
+    <label class="field"><span>Password <em>*</em></span><input type="password" name="password" minlength="8" required autocomplete="new-password"></label>
+    <label class="field"><span>Role</span><select name="role">{% for r in ROLES %}<option>{{ r }}</option>{% endfor %}</select></label>
+    <div class="form-actions"><button class="btn primary">Save user</button></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% macro field(name, label, obj, type="text", required=False, options=None, help=None, step=None) -%}
+{%- set v = request.form.get(name, '') if request.method == 'POST' else (obj[name] if obj[name] is not none else '') -%}
+<label class="field{{ ' wide' if type == 'textarea' }}">
+  <span>{{ label }}{% if required %} <em>*</em>{% endif %}</span>
+  {% if options is not none %}
+  <select name="{{ name }}" {{ 'required' if required }}>
+    <option value="">Select…</option>
+    {% for o in options %}{% set val, text = o if o is not string else (o, o) %}
+    <option value="{{ val }}" {{ 'selected' if val|string == v|string }}>{{ text }}</option>
+    {% endfor %}
+  </select>
+  {% elif type == 'textarea' %}
+  <textarea name="{{ name }}" rows="3" {{ 'required' if required }}>{{ v }}</textarea>
+  {% else %}
+  <input type="{{ type }}" name="{{ name }}" value="{{ v }}" {{ 'required' if required }}
+         {% if step %}step="{{ step }}" min="0"{% endif %}>
+  {% endif %}
+  {% if help %}<small>{{ help }}</small>{% endif %}
+</label>
+{%- endmacro %}
+
+{% macro flashes() -%}
+{% for cat, msg in get_flashed_messages(with_categories=true) %}
+<div class="flash {{ cat }}" role="status">{{ msg }}</div>
+{% endfor %}
+{%- endmacro %}
+
+{% macro badge(s) -%}
+{% if s %}<span class="badge {{ s|lower|replace(' ', '-') }}">{{ s }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro delete_btn(kind, id) -%}
+{% if g.user.role == 'admin' %}
+<form method="post" action="{{ url_for('delete', kind=kind, id=id) }}" class="inline"
+      onsubmit="return confirm('Delete this record permanently?')">
+  {{ csrf_input() }}<button class="btn danger">Delete</button>
+</form>
+{% endif %}
+{%- endmacro %}
+
+{% macro resolve_btn(s) -%}
+{% if s.status == 'Open' %}
+<form method="post" action="{{ url_for('service_resolve', id=s.id) }}" class="inline">
+  {{ csrf_input() }}<button class="btn sm">Mark resolved</button>
+</form>
+{% endif %}
+{%- endmacro %}
+
+{% macro empty(cols, text="No records found.") -%}
+<tr><td colspan="{{ cols }}" class="empty">{{ text }}</td></tr>
+{%- endmacro %}

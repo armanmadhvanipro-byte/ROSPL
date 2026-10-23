@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge, empty with context %}
+{% block title %}Warranties{% endblock %}
+{% block actions %}
+<form method="get" class="inline">
+  {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+  <label class="muted">Expiring within
+    <select name="days" onchange="this.form.submit()">
+      {% for d in [7, 15, 30, 60, 90, 180] %}<option value="{{ d }}" {{ 'selected' if d == days }}>{{ d }} days</option>{% endfor %}
+    </select>
+  </label>
+</form>
+{% endblock %}
+{% block content %}
+<nav class="tabs" data-t="warranty_tabs">
+  <a href="{{ url_for('warranties', days=days) }}" class="{{ 'active' if not status }}">All <b>{{ counts.values()|sum }}</b></a>
+  {% for s in WARRANTY_STATUSES %}
+  <a href="{{ url_for('warranties', status=s, days=days) }}" class="{{ 'active' if status == s }}">{{ s }} <b>{{ counts[s] }}</b></a>
+  {% endfor %}
+</nav>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Asset</th><th>Serial no</th><th>Vendor / Invoice</th><th>Start</th><th>Expiry</th><th class="num">Days left</th><th>Coverage</th><th>AMC till</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for a in assets %}
+  {% set st = status_of(a) %}
+  <tr class="{{ st|lower|replace(' ', '-') }}-row">
+    <td><a href="{{ url_for('asset_detail', id=a.id) }}"><b>{{ a.name }}</b></a></td>
+    <td>{{ a.serial_no or '—' }}</td>
+    <td>{% if a.purchase %}{{ a.purchase.vendor.name }}<br>
+      {% if a.purchase.invoice_file %}<a href="{{ url_for('invoice', id=a.purchase.id) }}" target="_blank">{{ a.purchase.invoice_no }}</a>{% else %}<small>{{ a.purchase.invoice_no }} (no document)</small>{% endif %}
+      {% else %}—{% endif %}</td>
+    <td>{{ a.warranty_start|d }}</td><td>{{ a.warranty_expiry|d }}</td>
+    <td class="num">{{ a.days_left if a.days_left is not none else '—' }}</td>
+    <td>{{ a.coverage_type or '—' }}</td><td>{{ a.amc_end|d }}</td>
+    <td>{{ badge(st) }}</td>
+  </tr>
+  {% else %}{{ empty(9) }}{% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

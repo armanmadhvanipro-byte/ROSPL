@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "macros.html" import field with context %}
+{% block title %}{{ 'Edit service record' if obj.id else 'New service record' }}{% endblock %}
+{% block content %}
+{% set asset_opts = [] %}
+{% for x in assets %}{% set _ = asset_opts.append((x.id, x.name ~ (' · ' ~ x.serial_no if x.serial_no else ''))) %}{% endfor %}
+<form method="post" class="card form">
+  {{ csrf_input() }}
+  <div class="form-grid">
+    {{ field('asset_id', 'Asset', obj, required=True, options=asset_opts) }}
+    {{ field('service_date', 'Service date', obj, type='date', required=True) }}
+    {{ field('provider', 'Service provider', obj) }}
+    {{ field('cost', 'Cost (₹)', obj, type='number', step='0.01') }}
+    {{ field('next_service_date', 'Next service date', obj, type='date') }}
+    {{ field('status', 'Status', obj, required=True, options=SERVICE_STATUSES, help='Open cases mark the asset Under Repair') }}
+    {{ field('issue', 'Issue reported', obj, type='textarea', required=True) }}
+    {{ field('action_taken', 'Action taken', obj, type='textarea') }}
+  </div>
+  <div class="form-actions"><button class="btn primary">Save record</button>
+    <a class="btn" href="{{ url_for('asset_detail', id=obj.asset_id) if obj.asset_id else url_for('services') }}">Cancel</a></div>
+</form>
+{% endblock %}

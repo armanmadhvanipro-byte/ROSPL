@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "macros.html" import field with context %}
+{% block title %}{{ 'Edit purchase' if obj.id else 'New purchase' }}{% endblock %}
+{% block content %}
+{% if not vendors %}
+<div class="flash warning">Add a vendor first. <a href="{{ url_for('vendor_form') }}">Create vendor →</a></div>
+{% endif %}
+<form method="post" enctype="multipart/form-data" class="card form">
+  {{ csrf_input() }}
+  <div class="form-grid">
+    {{ field('vendor_id', 'Vendor', obj, required=True, options=vendors) }}
+    {{ field('invoice_no', 'Invoice number', obj, required=True) }}
+    {{ field('purchase_date', 'Purchase date', obj, type='date', required=True) }}
+    {{ field('payment_status', 'Payment status', obj, required=True, options=PAYMENT_STATUSES) }}
+    {{ field('amount', 'Amount before tax (₹)', obj, type='number', step='0.01') }}
+    {{ field('tax', 'Tax / GST (₹)', obj, type='number', step='0.01') }}
+    <label class="field">
+      <span>Invoice document</span>
+      <input type="file" name="invoice_file" accept=".pdf,.png,.jpg,.jpeg,.webp">
+      <small>{% if obj.invoice_file %}Current: <a href="{{ url_for('invoice', id=obj.id) }}" target="_blank">view invoice</a>. Uploading replaces it.{% else %}PDF or image, up to 10 MB.{% endif %}</small>
+    </label>
+    {{ field('notes', 'Notes / items purchased', obj, type='textarea') }}
+  </div>
+  <div class="form-actions"><button class="btn primary">Save purchase</button>
+    <a class="btn" href="{{ url_for('purchase_detail', id=obj.id) if obj.id else url_for('purchases') }}">Cancel</a></div>
+</form>
+{% endblock %}

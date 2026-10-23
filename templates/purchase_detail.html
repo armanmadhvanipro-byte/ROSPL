@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge, delete_btn with context %}
+{% block title %}Invoice {{ p.invoice_no }}{% endblock %}
+{% block actions %}
+<a class="btn primary" href="{{ url_for('asset_form', purchase_id=p.id) }}">+ Register asset</a>
+<a class="btn" href="{{ url_for('purchase_form', id=p.id) }}">Edit</a>
+{{ delete_btn('purchases', p.id) }}
+{% endblock %}
+{% block content %}
+<div class="grid">
+  <section class="card">
+    <h2>Purchase details</h2>
+    <dl class="details">
+      <dt>Vendor</dt><dd><a href="{{ url_for('purchases', vendor_id=p.vendor.id) }}">{{ p.vendor.name }}</a>{% if p.vendor.gstin %} · GSTIN {{ p.vendor.gstin }}{% endif %}</dd>
+      <dt>Invoice no</dt><dd>{{ p.invoice_no }}</dd>
+      <dt>Purchase date</dt><dd>{{ p.purchase_date|d }}</dd>
+      <dt>Amount</dt><dd>{{ p.amount|money }}</dd>
+      <dt>Tax / GST</dt><dd>{{ p.tax|money }}</dd>
+      <dt>Total</dt><dd><b>{{ p.total|money }}</b></dd>
+      <dt>Payment</dt><dd>{{ badge(p.payment_status) }}</dd>
+      <dt>Notes</dt><dd>{{ p.notes or '—' }}</dd>
+    </dl>
+  </section>
+  <section class="card">
+    <h2>Invoice document</h2>
+    {% if p.invoice_file %}
+      {% if p.invoice_file.lower().endswith('.pdf') %}
+      <iframe class="doc" src="{{ url_for('invoice', id=p.id) }}" title="Invoice {{ p.invoice_no }}"></iframe>
+      {% else %}
+      <img class="doc" src="{{ url_for('invoice', id=p.id) }}" alt="Invoice {{ p.invoice_no }}">
+      {% endif %}
+      <p><a class="btn sm" href="{{ url_for('invoice', id=p.id) }}" target="_blank">Open in new tab</a></p>
+    {% else %}
+      <p class="flash warning">No invoice uploaded for this purchase. Proof of purchase is needed for warranty claims.</p>
+      <a class="btn" href="{{ url_for('purchase_form', id=p.id) }}">Upload invoice</a>
+    {% endif %}
+  </section>
+</div>
+<section class="card">
+  <h2>Assets from this purchase</h2>
+  {% set registered = p.assets|sum(attribute='price') %}
+  {% if p.assets and registered != p.amount %}
+  <p class="muted">Registered asset value {{ registered|money }} vs invoice amount {{ p.amount|money }}.</p>
+  {% endif %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Asset</th><th>Serial</th><th>Category</th><th class="num">Price</th><th>Warranty till</th><th>Warranty</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for a in p.assets %}
+    <tr><td><a href="{{ url_for('asset_detail', id=a.id) }}">{{ a.name }}</a></td><td>{{ a.serial_no or '—' }}</td><td>{{ a.category }}</td>
+        <td class="num">{{ a.price|money }}</td><td>{{ a.warranty_expiry|d }}</td><td>{{ badge(a.warranty_status) }}</td><td>{{ badge(a.status) }}</td></tr>
+    {% else %}<tr><td colspan="7" class="empty">No assets registered yet. <a href="{{ url_for('asset_form', purchase_id=p.id) }}">Register one</a>.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

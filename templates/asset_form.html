@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "macros.html" import field with context %}
+{% block title %}{{ 'Edit asset' if obj.id else 'Register asset' }}{% endblock %}
+{% block content %}
+{% set purchase_opts = [] %}
+{% for p in purchases %}{% set _ = purchase_opts.append((p.id, p.invoice_no ~ ' — ' ~ p.vendor.name ~ ' (' ~ p.purchase_date|d ~ ')')) %}{% endfor %}
+<form method="post" class="card form">
+  {{ csrf_input() }}
+  <h2>Asset</h2>
+  <div class="form-grid">
+    {{ field('name', 'Asset / product name', obj, required=True) }}
+    {{ field('category', 'Category', obj, required=True, options=CATEGORIES) }}
+    {{ field('serial_no', 'Serial no / asset ID', obj, help='Must be unique') }}
+    {{ field('purchase_id', 'Purchase invoice', obj, options=purchase_opts, help='Links the asset to its proof of purchase') }}
+    {{ field('price', 'Purchase price (₹)', obj, type='number', step='0.01') }}
+    {{ field('status', 'Status', obj, required=True, options=ASSET_STATUSES) }}
+    {{ field('department', 'Department', obj) }}
+    {{ field('location', 'Location', obj) }}
+  </div>
+  <h2>Warranty</h2>
+  <div class="form-grid">
+    {{ field('warranty_start', 'Warranty start', obj, type='date', help='Defaults to the purchase date') }}
+    {{ field('warranty_months', 'Duration (months)', obj, type='number', step='1') }}
+    {{ field('warranty_expiry', 'Warranty expiry', obj, type='date', help='Calculated from start + duration when a duration is given') }}
+    {{ field('coverage_type', 'Coverage type', obj, help='e.g. Onsite, parts & labour') }}
+  </div>
+  <p id="expiry-preview" class="muted"></p>
+  <h2>Annual Maintenance Contract (optional)</h2>
+  <div class="form-grid">
+    {{ field('amc_provider', 'AMC provider', obj) }}
+    {{ field('amc_start', 'AMC start', obj, type='date') }}
+    {{ field('amc_end', 'AMC end', obj, type='date') }}
+  </div>
+  <div class="form-actions"><button class="btn primary">Save asset</button>
+    <a class="btn" href="{{ url_for('asset_detail', id=obj.id) if obj.id else url_for('assets') }}">Cancel</a></div>
+</form>
+<script>
+  // Live preview of the expiry the server will calculate (same month-end clamping).
+  const start = document.querySelector('[name=warranty_start]'), months = document.querySelector('[name=warranty_months]');
+  const out = document.getElementById('expiry-preview');
+  const update = () => {
+    const d = new Date(start.value + 'T00:00'), m = parseInt(months.value, 10);
+    if (isNaN(d) || !m) { out.textContent = ''; return; }
+    const day = d.getDate();
+    d.setDate(1); d.setMonth(d.getMonth() + m);
+    d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+    out.textContent = 'Warranty will expire on ' + d.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
+  };
+  start.addEventListener('input', update); months.addEventListener('input', update); update();
+</script>
+{% endblock %}

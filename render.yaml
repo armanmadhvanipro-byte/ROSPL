@@ -1,0 +1,22 @@
+# Render blueprint: Dashboard → New → Blueprint → pick this repo.
+# Free plan disk is ephemeral: the SQLite data and uploads reset on each deploy/restart, and the
+# start command reloads the demo data. Point DATABASE_URL at a MySQL server to keep real data.
+services:
+  - type: web
+    name: purchase-warranty-manager
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: flask --app app seed && gunicorn app:app --workers 2 --threads 4 --timeout 120
+    healthCheckPath: /login
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_API_KEY_2
+        sync: false

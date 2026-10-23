@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "macros.html" import delete_btn, empty with context %}
+{% block title %}Vendors{% endblock %}
+{% block actions %}<a class="btn primary" data-t="new_vendor" href="{{ url_for('vendor_form') }}">+ New vendor</a>{% endblock %}
+{% block content %}
+<form class="filters" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search name, contact, GSTIN, phone…">
+  <button class="btn">Search</button>
+</form>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Vendor</th><th>Contact</th><th>Phone / Email</th><th>GSTIN</th><th class="num">Purchases</th><th class="num">Total spend</th><th></th></tr></thead>
+  <tbody>
+  {% for v in vendors %}
+  <tr>
+    <td><b>{{ v.name }}</b>{% if v.address %}<br><small class="muted">{{ v.address }}</small>{% endif %}</td>
+    <td>{{ v.contact_person or '—' }}</td>
+    <td>{{ v.phone or '' }}{% if v.email %}<br><small>{{ v.email }}</small>{% endif %}</td>
+    <td>{{ v.gstin or '—' }}</td>
+    <td class="num"><a href="{{ url_for('purchases', vendor_id=v.id) }}">{{ v.purchases|length }}</a></td>
+    <td class="num">{{ v.total_spend|money }}</td>
+    <td class="row-actions"><a class="btn sm" href="{{ url_for('purchase_form', vendor_id=v.id) }}">+ Purchase</a>
+      <a class="btn sm" href="{{ url_for('vendor_form', id=v.id) }}">Edit</a>{{ delete_btn('vendors', v.id) }}</td>
+  </tr>
+  {% else %}{{ empty(7) }}{% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}

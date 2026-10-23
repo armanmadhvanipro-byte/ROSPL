@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "macros.html" import field with context %}
+{% block title %}{{ 'Edit vendor' if obj.id else 'New vendor' }}{% endblock %}
+{% block content %}
+<form method="post" class="card form">
+  {{ csrf_input() }}
+  <div class="form-grid">
+    {{ field('name', 'Vendor name', obj, required=True) }}
+    {{ field('contact_person', 'Contact person', obj) }}
+    {{ field('phone', 'Phone', obj, type='tel') }}
+    {{ field('email', 'Email', obj, type='email') }}
+    {{ field('gstin', 'GSTIN', obj, help='15-character GST identification number') }}
+    {{ field('address', 'Address', obj, type='textarea') }}
+  </div>
+  <div class="form-actions"><button class="btn primary">Save vendor</button><a class="btn" href="{{ url_for('vendors') }}">Cancel</a></div>
+</form>
+{% endblock %}

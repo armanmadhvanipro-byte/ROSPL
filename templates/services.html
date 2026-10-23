@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge, delete_btn, resolve_btn, empty with context %}
+{% block title %}Service &amp; Maintenance{% endblock %}
+{% block actions %}<a class="btn primary" data-t="add_service" href="{{ url_for('service_form') }}">+ Service record</a>{% endblock %}
+{% block content %}
+{% set a = request.args %}
+<form class="filters" method="get">
+  <input type="search" name="q" value="{{ a.q }}" placeholder="Asset, serial, issue, provider…">
+  <select name="status"><option value="">Any status</option>
+    {% for s in SERVICE_STATUSES %}<option {{ 'selected' if a.status == s }}>{{ s }}</option>{% endfor %}</select>
+  <button class="btn">Filter</button>
+  {% if a %}<a class="btn ghost" href="{{ url_for('services') }}">Clear</a>{% endif %}
+</form>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Date</th><th>Asset</th><th>Issue</th><th>Provider</th><th>Action taken</th><th class="num">Cost</th><th>Next service</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for s in services %}
+  <tr>
+    <td>{{ s.service_date|d }}</td>
+    <td><a href="{{ url_for('asset_detail', id=s.asset.id) }}">{{ s.asset.name }}</a><br><small class="muted">{{ s.asset.serial_no or '' }}</small></td>
+    <td>{{ s.issue }}</td><td>{{ s.provider or '—' }}</td><td>{{ s.action_taken or '—' }}</td>
+    <td class="num">{{ s.cost|money }}</td><td>{{ s.next_service_date|d }}</td><td>{{ badge(s.status) }}</td>
+    <td class="row-actions">{{ resolve_btn(s) }}<a class="btn sm" href="{{ url_for('service_form', id=s.id) }}">Edit</a>{{ delete_btn('services', s.id) }}</td>
+  </tr>
+  {% else %}{{ empty(9) }}{% endfor %}
+  </tbody>
+  {% if services %}<tfoot><tr><td colspan="5">{{ services|length }} records</td><td class="num"><b>{{ services|sum(attribute='cost')|money }}</b></td><td colspan="3"></td></tr></tfoot>{% endif %}
+</table></div>
+{% endblock %}

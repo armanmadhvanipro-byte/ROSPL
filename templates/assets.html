@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge, delete_btn, empty with context %}
+{% block title %}Assets{% endblock %}
+{% block actions %}<a class="btn primary" data-t="register_asset" href="{{ url_for('asset_form') }}">+ Register asset</a>{% endblock %}
+{% block content %}
+{% set a = request.args %}
+<form class="filters" method="get">
+  <input type="search" name="q" value="{{ a.q }}" placeholder="Name, serial no, department, location…">
+  <select name="category"><option value="">All categories</option>
+    {% for c in CATEGORIES %}<option {{ 'selected' if a.category == c }}>{{ c }}</option>{% endfor %}</select>
+  <select name="status"><option value="">Any status</option>
+    {% for s in ASSET_STATUSES %}<option {{ 'selected' if a.status == s }}>{{ s }}</option>{% endfor %}</select>
+  <select name="warranty"><option value="">Any warranty</option>
+    {% for s in WARRANTY_STATUSES %}<option {{ 'selected' if a.warranty == s }}>{{ s }}</option>{% endfor %}</select>
+  <button class="btn">Filter</button>
+  {% if a %}<a class="btn ghost" href="{{ url_for('assets') }}">Clear</a>{% endif %}
+</form>
+<div class="card table-wrap"><table>
+  <thead><tr><th>Asset</th><th>Serial no</th><th>Category</th><th>Department / Location</th><th class="num">Price</th><th>Warranty till</th><th>Warranty</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for x in assets %}
+  <tr>
+    <td><a href="{{ url_for('asset_detail', id=x.id) }}"><b>{{ x.name }}</b></a>{% if x.purchase %}<br><small class="muted">{{ x.purchase.vendor.name }} · {{ x.purchase.invoice_no }}</small>{% endif %}</td>
+    <td>{{ x.serial_no or '—' }}</td><td>{{ x.category }}</td>
+    <td>{{ x.department or '—' }}{% if x.location %}<br><small class="muted">{{ x.location }}</small>{% endif %}</td>
+    <td class="num">{{ x.price|money }}</td><td>{{ x.warranty_expiry|d }}</td>
+    <td>{{ badge(x.warranty_status) }}</td><td>{{ badge(x.status) }}</td>
+    <td class="row-actions"><a class="btn sm" href="{{ url_for('asset_form', id=x.id) }}">Edit</a>{{ delete_btn('assets', x.id) }}</td>
+  </tr>
+  {% else %}{{ empty(9) }}{% endfor %}
+  </tbody>
+</table></div>
+{% endblock %}
