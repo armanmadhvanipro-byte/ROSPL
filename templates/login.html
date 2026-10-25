@@ -4,8 +4,8 @@
 {% block bare %}
 <div class="login">
   <form method="post" class="card">
-    <h1>Purchase &amp; Warranty Manager</h1>
-    <p class="muted">Sign in to manage purchases, invoices, assets and warranties.</p>
+    <h1>{{ APP_NAME }}</h1>
+    <p class="muted">Keeps watch over your purchases, invoices and warranties. Sign in to continue.</p>
     {{ flashes() }}
     {{ csrf_input() }}
     <label class="field"><span>Username</span><input name="username" autocomplete="username" required autofocus></label>

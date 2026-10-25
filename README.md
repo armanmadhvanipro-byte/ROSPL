@@ -1,4 +1,6 @@
-# Purchase & Warranty Manager
+# Phylax
+
+*From the Greek φύλαξ, "guardian".* A purchase, invoice and warranty tracker for small businesses.
 
 Business purchase, invoice, asset, warranty and service tracking — BE SEM 7 ROSPL mini project
 (Atharva College of Engineering, IT). See `Purchase_Warranty_Manager_Report.docx` for the full report.

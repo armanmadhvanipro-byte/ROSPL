@@ -1,4 +1,4 @@
-"""Purchase & Warranty Manager - business purchase, invoice, asset, warranty and service tracking."""
+"""Phylax - business purchase, invoice, asset, warranty and service tracking."""
 import base64
 import csv
 import io
@@ -31,6 +31,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=bool(os.environ.get("RENDER")),  # Render serves HTTPS only and sets RENDER
     SESSION_COOKIE_SAMESITE="Lax",
 )
+APP_NAME = "Phylax"  # Greek φύλαξ, "guardian"
 UPLOAD_DIR = os.path.join(app.instance_path, "uploads")
 ALLOWED_EXT = {"pdf", "png", "jpg", "jpeg", "webp"}
 EXPIRING_DAYS = int(os.environ.get("EXPIRING_DAYS", 30))
@@ -257,6 +258,7 @@ def admin_required(view):
 def inject():
     token = session.setdefault("csrf", secrets.token_hex(16))
     return dict(
+        APP_NAME=APP_NAME,
         csrf_token=token,
         csrf_input=lambda: Markup(f'<input type="hidden" name="csrf_token" value="{token}">'),
         today=date.today(), CATEGORIES=CATEGORIES, ASSET_STATUSES=ASSET_STATUSES,
@@ -774,7 +776,7 @@ def report_pdf(title, headers, rows, totals):
         ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]))
-    doc.build([Paragraph(f"Purchase &amp; Warranty Manager — {title}", styles["Title"]),
+    doc.build([Paragraph(f"{APP_NAME}: {title}", styles["Title"]),
                Paragraph(f"Generated on {fmt_date(date.today())} · amounts in INR", styles["Normal"]),
                Spacer(1, 12), table])
     return buf.getvalue()
@@ -894,7 +896,7 @@ _GLOSSARY = "; ".join(f"{k}={v}" for k, v in POINT_TARGETS.items())
 YAPPR_GUIDE_TOOLS = [_fn("point_at", f"Show where something is on the page and what to do there. Targets: {_GLOSSARY}",
                          YAPPR_TOOLS[-1]["function"]["parameters"]["properties"], ["target", "text"])]
 
-YAPPR_SYSTEM = f"""You are Yappr, the friendly assistant inside Purchase & Warranty Manager, the app this business uses to track purchases, invoices, vendors, assets, warranties, AMCs and service/repair history. If asked your name, you're Yappr. You appear as a little animated companion on the page.
+YAPPR_SYSTEM = f"""You are Yappr, the friendly assistant inside {APP_NAME}, the app this business uses to track purchases, invoices, vendors, assets, warranties, AMCs and service/repair history. If asked your name, you're Yappr. You appear as a little animated companion on the page.
 Facts only from tool results; never guess numbers, names, dates or amounts. To show, open, filter or export, use the tools (the page follows them), then say in one line what is on screen. A how, where or show-me question always gets point_at (or the tool that does it), never a text-only answer. Use as few tool calls as the question needs.
 Warranty status is Active, Expiring Soon (within the window, default {EXPIRING_DAYS} days), Expired, or Pending (no coverage recorded). Amounts are Indian rupees: write ₹1,23,456.
 Sound like a warm colleague: the answer first, then at most three short points. Plain sentences, no tables or headings. Reply in the user's language (English, Hindi or Hinglish)."""
@@ -1096,7 +1098,7 @@ def _model_post(url, key, body):
     # Groq's Cloudflare front refuses urllib's default "Python-urllib" agent (error 1010).
     req = urllib.request.Request(url, json.dumps(body, default=str).encode(),
                                  {"Authorization": f"Bearer {key}", "Content-Type": "application/json",
-                                  "User-Agent": "PurchaseWarrantyManager-Yappr/1.0"})
+                                  "User-Agent": f"{APP_NAME}-Yappr/1.0"})
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.load(r)["choices"][0]["message"]
 

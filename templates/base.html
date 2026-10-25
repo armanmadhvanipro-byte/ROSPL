@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{% endblock %} · Purchase & Warranty Manager</title>
+  <title>{% block title %}{% endblock %} · {{ APP_NAME }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   {% if g.user %}
   <meta name="csrf-token" content="{{ csrf_token }}">
@@ -17,7 +17,7 @@
 {% if g.user %}
 <div class="layout">
   <aside class="sidebar">
-    <a class="brand" href="{{ url_for('dashboard') }}"><b>PWM</b><span>Purchase &amp; Warranty Manager</span></a>
+    <a class="brand" href="{{ url_for('dashboard') }}"><b>{{ APP_NAME }}</b><span>Purchases &amp; warranties</span></a>
     <nav>
       {% set nav = [('dashboard', 'Dashboard'), ('purchases', 'Purchases'), ('vendors', 'Vendors'), ('assets', 'Assets'),
                     ('warranties', 'Warranties'), ('services', 'Services'), ('reports', 'Reports')] %}
