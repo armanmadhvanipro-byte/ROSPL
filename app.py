@@ -11,7 +11,6 @@ from calendar import monthrange
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from functools import wraps
-import pandas as pd
 
 from flask import (Flask, Response, abort, flash, g, redirect, render_template,
                    request, send_from_directory, session, url_for)
