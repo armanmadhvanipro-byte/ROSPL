@@ -1,3 +1,4 @@
+```html
 {% extends "base.html" %}
 {% from "macros.html" import badge, delete_btn, empty with context %}
 
@@ -10,6 +11,36 @@
 
 {% block content %}
 {% set a = request.args %}
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card p-3">
+      <h6>Total Purchases</h6>
+      <h3>{{ total_purchases }}</h3>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <h6>Total Amount</h6>
+      <h3>{{ total_amount|money }}</h3>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <h6>Paid</h6>
+      <h3>{{ paid_purchases }}</h3>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card p-3">
+      <h6>Pending / Partial</h6>
+      <h3>{{ pending_purchases }}</h3>
+    </div>
+  </div>
+</div>
 
 <form class="filters" method="get">
   <input type="search" name="q" value="{{ a.q }}" placeholder="Invoice no, vendor, notes…">
@@ -25,7 +56,6 @@
 
   <select name="payment">
     <option value="">Any payment</option>
-
     <option value="unpaid" {{ 'selected' if a.payment == 'unpaid' }}>
       Not fully paid
     </option>
@@ -89,11 +119,9 @@
         </td>
 
         <td>{{ p.purchase_date|d }}</td>
-
         <td>{{ p.vendor.name }}</td>
 
         <td class="num">{{ p.amount|money }}</td>
-
         <td class="num">{{ p.tax|money }}</td>
 
         <td class="num">
@@ -142,3 +170,4 @@
 </div>
 
 {% endblock %}
+```
